@@ -62,13 +62,10 @@ void cpu_reset(cpu_t *cpu) {
     cpu->x = 0;
     cpu->y = 0;
 
-    cpu->sp = 0xFD; /* hardcoded stack vector post-reset */
-    cpu->pc = 0xFCE2; /* hardcoded start vector post-reset */
+    cpu->pc = (cpu_bus_read(cpu, RST_VECTOR_H) << 8) | cpu_bus_read(cpu, RST_VECTOR_L);
+    cpu->sp = 0xFD;
 
-    cpu_set_flag(cpu, FLAG_INTERRUPT, 1);
-    cpu_set_flag(cpu, FLAG_DECIMAL, 0);
-    cpu_set_flag(cpu, FLAG_BREAK, 1);
-    cpu_set_flag(cpu, FLAG_CONSTANT, 1);
+    cpu->status = FLAG_CONSTANT | FLAG_BREAK;
 }
 
 /**
@@ -79,7 +76,7 @@ void cpu_test(cpu_t *cpu) {
     assert(cpu != NULL);
 
     assert(cpu->pc == 0xFCE2);
-    assert(cpu->sp == 0x01FD);
+    assert(cpu->sp == 0xFD);
     assert(cpu->status == (FLAG_INTERRUPT | FLAG_BREAK | FLAG_CONSTANT));
 }
 
@@ -109,6 +106,65 @@ uint8_t cpu_bus_read(cpu_t *cpu, uint16_t address) {
     return cpu->bus->read(cpu->bus, address);
 }
 
+/**
+ * @brief Pops a value off of the stack
+ * @param cpu The cpu wanting to pop
+ * @return The value popped off of the stack
+ */
+uint8_t cpu_stack_pop(cpu_t *cpu) {
+    assert(cpu != NULL);
+    return cpu_bus_read(cpu, 0x100 | ++cpu->sp);
+}
+
+/**
+ * @brief Pushes a value onto the stack
+ * @param cpu The cpu wanting to push
+ * @param value The value to push onto the stack
+ */
+void cpu_stack_push(cpu_t *cpu, uint8_t value) {
+    assert(cpu != NULL);
+    cpu_bus_write(cpu, 0x100 | cpu->sp--, value);
+}
+
+
+/**
+ * @brief Interrupts the cpu to execute a request
+ * @param cpu The cpu to interrupt
+ */
+void cpu_irq(cpu_t *cpu) {
+    assert(cpu != NULL);
+
+    if (cpu->status & FLAG_INTERRUPT) {
+        cpu_stack_push(cpu, (cpu->pc >> 8) & 0xff);
+        cpu_stack_push(cpu, cpu->pc & 0xff);
+
+        cpu_stack_push(cpu, cpu->status);
+
+        cpu_set_flag(cpu, FLAG_INTERRUPT, 1);
+        cpu_set_flag(cpu, FLAG_BREAK, 0);
+
+        cpu->pc = (cpu_bus_read(cpu, IRQ_VECTOR_H) << 8) | cpu_bus_read(cpu, IRQ_VECTOR_L);
+    }
+}
+
+/**
+ * @brief Non-maskable interrupts request
+ * @param cpu The cpu to interrupt
+ */
+void cpu_nmi(cpu_t *cpu) {
+    assert(cpu != NULL);
+
+    cpu_stack_push(cpu, (cpu->pc >> 8) & 0xff);
+    cpu_stack_push(cpu, cpu->pc & 0xff);
+
+    cpu_stack_push(cpu, cpu->status);
+
+    cpu_set_flag(cpu, FLAG_INTERRUPT, 1);
+    cpu_set_flag(cpu, FLAG_BREAK, 0);
+
+    cpu->pc = (cpu_bus_read(cpu, NMI_VECTOR_H) << 8) | cpu_bus_read(cpu, NMI_VECTOR_L);
+}
+
 typedef uint16_t (*cpu_addr_t)(cpu_t *cpu);
 
 cpu_addr_t cpu_addr_table[] = {
@@ -126,6 +182,20 @@ cpu_addr_t cpu_addr_table[] = {
     cpu_addr_rel,
     cpu_addr_imp,
 };
+
+uint16_t cpu_addr(cpu_t *cpu, uint8_t opcode) {
+    return cpu_addr_table[opcode >> 2](cpu);
+}
+
+void cpu_op_and(cpu_t *cpu, uint16_t in) {
+    uint8_t m = cpu_addr(cpu, in);
+    uint8_t res = cpu->a & m;
+
+    cpu_set_flag(cpu, FLAG_NEGATIVE, res & 0x80);
+    cpu_set_flag(cpu, FLAG_ZERO, res == 0);
+
+    cpu->a = res;
+}
 
 /**
  * @brief Argument addressing mode: accumulator

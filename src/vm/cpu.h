@@ -27,6 +27,13 @@
 #define IF_ZERO(status) ((status & FLAG_ZERO))
 #define IF_CARRY(status) ((status & FLAG_CARRY))
 
+#define IRQ_VECTOR_H 0xFFFF
+#define IRQ_VECTOR_L 0xFFFE
+#define NMI_VECTOR_H 0xFFFB
+#define NMI_VECTOR_L 0xFFFA
+#define RST_VECTOR_H 0xFFFD
+#define RST_VECTOR_L 0xFFFC
+
 typedef struct {
     uint8_t a;      /* accumulator */
     uint8_t x;      /* index register x */
@@ -85,6 +92,32 @@ void cpu_bus_write(cpu_t *cpu, uint16_t address, uint8_t data);
  * @return The data read from the bus
  */
 uint8_t cpu_bus_read(cpu_t *cpu, uint16_t address);
+
+/**
+ * @brief Pops a value off of the stack
+ * @param cpu The cpu wanting to pop
+ * @return The value popped off of the stack
+ */
+uint8_t cpu_stack_pop(cpu_t *cpu);
+
+/**
+ * @brief Pushes a value onto the stack
+ * @param cpu The cpu wanting to push
+ * @param value The value to push onto the stack
+ */
+void cpu_stack_push(cpu_t *cpu, uint8_t value);
+
+/**
+ * @brief Interrupts the cpu to execute a request
+ * @param cpu The cpu to interrupt
+ */
+void cpu_irq(cpu_t *cpu);
+
+/**
+ * @brief Non-maskable interrupts request
+ * @param cpu The cpu to interrupt
+ */
+void cpu_nmi(cpu_t *cpu);
 
 /**
  * @brief Argument addressing mode: accumulator

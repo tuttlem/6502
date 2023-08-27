@@ -3,11 +3,13 @@
 #define __6502_vm_system_h__
 
 #include "cpu.h"
+#include "bus.h"
+#include "memory.h"
 
 #include <assert.h>
 #include <stdlib.h>
 
-#define SYSTEM_MEMORY_SIZE 0x10000
+#define SYSTEM_MEMORY_SIZE ((uint16_t)0x10000)
 
 #define SYSTEM_IRQ_VECTOR_H 0xFFFF
 #define SYSTEM_IRQ_VECTOR_L 0xFFFE
@@ -20,9 +22,7 @@
 typedef struct {
     cpu_t *cpu;                 /* system processor */
     bus_t *bus;                 /* communication bus */
-
-    uint8_t *memory;
-    uint16_t memory_size;
+    memory_t *memory;           /* system memory */
 } system_t;
 
 /**

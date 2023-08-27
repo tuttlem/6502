@@ -5,7 +5,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
+
 #include "bus.h"
+#include "opcode.h"
 
 #define FLAG_CARRY      0x01
 #define FLAG_ZERO       0x02
@@ -83,5 +85,97 @@ void cpu_bus_write(cpu_t *cpu, uint16_t address, uint8_t data);
  * @return The data read from the bus
  */
 uint8_t cpu_bus_read(cpu_t *cpu, uint16_t address);
+
+/**
+ * @brief Argument addressing mode: accumulator
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_acc(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: implied
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_imp(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: immediate
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_imm(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: zero page
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_zp(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: indexed-x zero page
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_zpx(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: indexed-y zero page
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_zpy(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: relative
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_rel(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: absolute
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_abs(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: indexed-x absolute
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_abx(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: indexed-y absolute
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_aby(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: absolute indirect
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_ind(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: indexed-x indirect
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_inx(cpu_t *cpu);
+
+/**
+ * @brief Argument addressing mode: indexed-y indirect
+ * @param cpu The executing cpu
+ * @return The value
+ */
+uint16_t cpu_addr_iny(cpu_t *cpu);
+
 
 #endif /* __6502_vm_cpu_h__ */

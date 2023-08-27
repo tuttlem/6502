@@ -22,9 +22,7 @@ system_t *system_create() {
 
     system->cpu->bus = system->bus;
 
-    system->memory_size = SYSTEM_MEMORY_SIZE;
-    system->memory = malloc(system->memory_size);
-    assert(system->memory != NULL);
+    system->memory = memory_create(SYSTEM_MEMORY_SIZE);
 
     system->cpu->a = 0;
     system->cpu->x = 0;
@@ -47,7 +45,8 @@ void system_destroy(system_t *system) {
 
     cpu_destroy(system->cpu);
     bus_destroy(system->bus);
-    free(system->memory);
+    memory_destroy(system->memory);
+
     free(system);
 
     system = NULL;
@@ -98,7 +97,7 @@ uint8_t system_reader(void *ptr, uint16_t address) {
     assert(b->system != NULL);
     system_t *s = (system_t *)b->system;
 
-    return s->memory[address];
+    return s->memory->data[address];
 }
 
 /**
@@ -114,6 +113,6 @@ void system_writer(void *ptr, uint16_t address, uint8_t value) {
     assert(b->system != NULL);
     system_t *s = (system_t *)b->system;
 
-    s->memory[address] = value;
+    s->memory->data[address] = value;
 }
 

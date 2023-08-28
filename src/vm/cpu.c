@@ -1,7 +1,6 @@
 
 #include "./cpu.h"
 
-
 /**
  * @brief Create a new cpu
  * @return A pointer to the new cpu
@@ -62,7 +61,7 @@ void cpu_reset(cpu_t *cpu) {
     cpu->x = 0;
     cpu->y = 0;
 
-    cpu->pc = (cpu_bus_read(cpu, RST_VECTOR_H) << 8) | cpu_bus_read(cpu, RST_VECTOR_L);
+    cpu->pc = (cpu_read(cpu, RST_VECTOR_H) << 8) | cpu_read(cpu, RST_VECTOR_L);
     cpu->sp = 0xFD;
 
     cpu->status = FLAG_CONSTANT | FLAG_BREAK;
@@ -86,7 +85,7 @@ void cpu_test(cpu_t *cpu) {
  * @param address The address to write to
  * @param data The data to write
  */
-void cpu_bus_write(cpu_t *cpu, uint16_t address, uint8_t data) {
+void cpu_write(cpu_t *cpu, uint16_t address, uint8_t data) {
     assert(cpu != NULL);
     assert(cpu->bus != NULL);
 
@@ -99,7 +98,7 @@ void cpu_bus_write(cpu_t *cpu, uint16_t address, uint8_t data) {
  * @param address The address to read from
  * @return The data read from the bus
  */
-uint8_t cpu_bus_read(cpu_t *cpu, uint16_t address) {
+uint8_t cpu_read(cpu_t *cpu, uint16_t address) {
     assert(cpu != NULL);
     assert(cpu->bus != NULL);
 
@@ -111,9 +110,9 @@ uint8_t cpu_bus_read(cpu_t *cpu, uint16_t address) {
  * @param cpu The cpu wanting to pop
  * @return The value popped off of the stack
  */
-uint8_t cpu_stack_pop(cpu_t *cpu) {
+uint8_t cpu_pop(cpu_t *cpu) {
     assert(cpu != NULL);
-    return cpu_bus_read(cpu, 0x100 | ++cpu->sp);
+    return cpu_read(cpu, 0x100 | ++cpu->sp);
 }
 
 /**
@@ -121,9 +120,9 @@ uint8_t cpu_stack_pop(cpu_t *cpu) {
  * @param cpu The cpu wanting to push
  * @param value The value to push onto the stack
  */
-void cpu_stack_push(cpu_t *cpu, uint8_t value) {
+void cpu_push(cpu_t *cpu, uint8_t value) {
     assert(cpu != NULL);
-    cpu_bus_write(cpu, 0x100 | cpu->sp--, value);
+    cpu_write(cpu, 0x100 | cpu->sp--, value);
 }
 
 
@@ -135,15 +134,15 @@ void cpu_irq(cpu_t *cpu) {
     assert(cpu != NULL);
 
     if (cpu->status & FLAG_INTERRUPT) {
-        cpu_stack_push(cpu, (cpu->pc >> 8) & 0xff);
-        cpu_stack_push(cpu, cpu->pc & 0xff);
+        cpu_push(cpu, (cpu->pc >> 8) & 0xff);
+        cpu_push(cpu, cpu->pc & 0xff);
 
-        cpu_stack_push(cpu, cpu->status);
+        cpu_push(cpu, cpu->status);
 
         cpu_set_flag(cpu, FLAG_INTERRUPT, 1);
         cpu_set_flag(cpu, FLAG_BREAK, 0);
 
-        cpu->pc = (cpu_bus_read(cpu, IRQ_VECTOR_H) << 8) | cpu_bus_read(cpu, IRQ_VECTOR_L);
+        cpu->pc = (cpu_read(cpu, IRQ_VECTOR_H) << 8) | cpu_read(cpu, IRQ_VECTOR_L);
     }
 }
 
@@ -154,190 +153,15 @@ void cpu_irq(cpu_t *cpu) {
 void cpu_nmi(cpu_t *cpu) {
     assert(cpu != NULL);
 
-    cpu_stack_push(cpu, (cpu->pc >> 8) & 0xff);
-    cpu_stack_push(cpu, cpu->pc & 0xff);
+    cpu_push(cpu, (cpu->pc >> 8) & 0xff);
+    cpu_push(cpu, cpu->pc & 0xff);
 
-    cpu_stack_push(cpu, cpu->status);
+    cpu_push(cpu, cpu->status);
 
     cpu_set_flag(cpu, FLAG_INTERRUPT, 1);
     cpu_set_flag(cpu, FLAG_BREAK, 0);
 
-    cpu->pc = (cpu_bus_read(cpu, NMI_VECTOR_H) << 8) | cpu_bus_read(cpu, NMI_VECTOR_L);
+    cpu->pc = (cpu_read(cpu, NMI_VECTOR_H) << 8) | cpu_read(cpu, NMI_VECTOR_L);
 }
 
-typedef uint16_t (*cpu_addr_t)(cpu_t *cpu);
-
-cpu_addr_t cpu_addr_table[] = {
-    cpu_addr_acc,
-    cpu_addr_imm,
-    cpu_addr_abs,
-    cpu_addr_abx,
-    cpu_addr_aby,
-    cpu_addr_zp,
-    cpu_addr_zpx,
-    cpu_addr_zpy,
-    cpu_addr_ind,
-    cpu_addr_inx,
-    cpu_addr_iny,
-    cpu_addr_rel,
-    cpu_addr_imp,
-};
-
-uint16_t cpu_addr(cpu_t *cpu, uint8_t opcode) {
-    return cpu_addr_table[opcode >> 2](cpu);
-}
-
-void cpu_op_and(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
-    uint8_t res = cpu->a & m;
-
-    cpu_set_flag(cpu, FLAG_NEGATIVE, res & 0x80);
-    cpu_set_flag(cpu, FLAG_ZERO, res == 0);
-
-    cpu->a = res;
-}
-
-/**
- * @brief Argument addressing mode: accumulator
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_acc(cpu_t *cpu) {
-    return 0;
-}
-
-/**
- * @brief Argument addressing mode: implied
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_imp(cpu_t *cpu) {
-    return 0;
-}
-
-/**
- * @brief Argument addressing mode: immediate
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_imm(cpu_t *cpu) {
-    return cpu->pc++;
-}
-
-/**
- * @brief Argument addressing mode: zero page
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_zp(cpu_t *cpu) {
-    return cpu_bus_read(cpu, cpu->pc++);
-}
-
-/**
- * @brief Argument addressing mode: indexed-x zero page
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_zpx(cpu_t *cpu) {
-    return (cpu_bus_read(cpu, cpu->pc++) + cpu->x) & 0xff;
-}
-
-/**
- * @brief Argument addressing mode: indexed-y zero page
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_zpy(cpu_t *cpu) {
-    return (cpu_bus_read(cpu, cpu->pc++) + cpu->y) & 0xff;
-}
-
-/**
- * @brief Argument addressing mode: relative
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_rel(cpu_t *cpu) {
-    return cpu_bus_read(cpu, cpu->pc++);
-}
-
-/**
- * @brief Argument addressing mode: absolute
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_abs(cpu_t *cpu) {
-    uint16_t lo = cpu_bus_read(cpu, cpu->pc++);
-    uint16_t hi = cpu_bus_read(cpu, cpu->pc++);
-
-    return (hi << 8) | lo;
-}
-
-/**
- * @brief Argument addressing mode: indexed-x absolute
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_abx(cpu_t *cpu) {
-    uint16_t lo = cpu_bus_read(cpu, cpu->pc++);
-    uint16_t hi = cpu_bus_read(cpu, cpu->pc++);
-
-    return ((hi << 8) | lo) + cpu->x;
-}
-
-/**
- * @brief Argument addressing mode: indexed-y absolute
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_aby(cpu_t *cpu) {
-    uint16_t lo = cpu_bus_read(cpu, cpu->pc++);
-    uint16_t hi = cpu_bus_read(cpu, cpu->pc++);
-
-    return ((hi << 8) | lo) + cpu->y;
-}
-
-/**
- * @brief Argument addressing mode: absolute indirect
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_ind(cpu_t *cpu) {
-    uint16_t lo = cpu_bus_read(cpu, cpu->pc++);
-    uint16_t hi = cpu_bus_read(cpu, cpu->pc++);
-
-    uint16_t ptr = (hi << 8) | lo;
-
-    lo = cpu_bus_read(cpu, ptr);
-    hi = cpu_bus_read(cpu, ptr + 1);
-
-    return (hi << 8) | lo;
-}
-
-/**
- * @brief Argument addressing mode: indexed-x indirect
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_inx(cpu_t *cpu) {
-    uint16_t ptr = (cpu_bus_read(cpu, cpu->pc++) + cpu->x) & 0xff;
-
-    uint16_t lo = cpu_bus_read(cpu, ptr);
-    uint16_t hi = cpu_bus_read(cpu, ptr + 1);
-
-    return (hi << 8) | lo;
-}
-
-/**
- * @brief Argument addressing mode: indexed-y indirect
- * @param cpu The executing cpu
- * @return The value
- */
-uint16_t cpu_addr_iny(cpu_t *cpu) {
-    uint16_t ptr = cpu_bus_read(cpu, cpu->pc++);
-
-    uint16_t lo = cpu_bus_read(cpu, ptr);
-    uint16_t hi = cpu_bus_read(cpu, ptr + 1);
-
-    return ((hi << 8) | lo) + cpu->y;
-}
 

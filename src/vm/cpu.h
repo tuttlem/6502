@@ -45,6 +45,9 @@ typedef struct {
     bus_t *bus;     /* communication bus */
 } cpu_t;
 
+typedef uint16_t (*cpu_addr_t)(cpu_t*);
+typedef void (*cpu_op_t)(cpu_t*, uint16_t);
+
 /**
  * @brief Create a new cpu
  * @return A pointer to the new cpu
@@ -83,7 +86,7 @@ void cpu_test(cpu_t *cpu);
  * @param address The address to write to
  * @param data The data to write
  */
-void cpu_bus_write(cpu_t *cpu, uint16_t address, uint8_t data);
+void cpu_write(cpu_t *cpu, uint16_t address, uint8_t data);
 
 /**
  * @brief Reads a value from the bus
@@ -91,21 +94,21 @@ void cpu_bus_write(cpu_t *cpu, uint16_t address, uint8_t data);
  * @param address The address to read from
  * @return The data read from the bus
  */
-uint8_t cpu_bus_read(cpu_t *cpu, uint16_t address);
+uint8_t cpu_read(cpu_t *cpu, uint16_t address);
 
 /**
  * @brief Pops a value off of the stack
  * @param cpu The cpu wanting to pop
  * @return The value popped off of the stack
  */
-uint8_t cpu_stack_pop(cpu_t *cpu);
+uint8_t cpu_pop(cpu_t *cpu);
 
 /**
  * @brief Pushes a value onto the stack
  * @param cpu The cpu wanting to push
  * @param value The value to push onto the stack
  */
-void cpu_stack_push(cpu_t *cpu, uint8_t value);
+void cpu_push(cpu_t *cpu, uint8_t value);
 
 /**
  * @brief Interrupts the cpu to execute a request
@@ -118,6 +121,14 @@ void cpu_irq(cpu_t *cpu);
  * @param cpu The cpu to interrupt
  */
 void cpu_nmi(cpu_t *cpu);
+
+/**
+ * @brief Get the address of the argument for the given opcode
+ * @param cpu The executing cpu
+ * @param opcode The opcode to get the argument address for
+ * @return The address of the argument
+ */
+uint16_t cpu_addr(cpu_t *cpu, uint8_t opcode);
 
 /**
  * @brief Argument addressing mode: accumulator
@@ -210,5 +221,25 @@ uint16_t cpu_addr_inx(cpu_t *cpu);
  */
 uint16_t cpu_addr_iny(cpu_t *cpu);
 
+/**
+ * @brief Unknown
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_unk(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief AND (with accumulator)
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_and(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Force Break
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_brk(cpu_t *cpu, uint16_t in);
 
 #endif /* __6502_vm_cpu_h__ */

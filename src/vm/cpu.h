@@ -69,6 +69,14 @@ void cpu_destroy(cpu_t *cpu);
 void cpu_set_flag(cpu_t *cpu, uint8_t flag, uint8_t value);
 
 /**
+ * @brief Get a flag from the cpu
+ * @param cpu The cpu to get the flag from
+ * @param flag The flag to get
+ * @return The value of the flag
+ */
+uint8_t cpu_get_flag(cpu_t *cpu, uint8_t flag);
+
+/**
  * @brief Reset a cpu
  * @param cpu The cpu to reset
  */
@@ -229,6 +237,13 @@ uint16_t cpu_addr_iny(cpu_t *cpu);
 void cpu_op_unk(cpu_t *cpu, uint16_t in);
 
 /**
+ * @brief Add with Carry
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_adc(cpu_t *cpu, uint16_t in);
+
+/**
  * @brief AND (with accumulator)
  * @param cpu The executing cpu
  * @param opcode The source instruction
@@ -236,10 +251,381 @@ void cpu_op_unk(cpu_t *cpu, uint16_t in);
 void cpu_op_and(cpu_t *cpu, uint16_t in);
 
 /**
+ * @brief Arithmetic Shift Left
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_asl(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Branch on Carry Clear
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_bcc(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Branch on Carry Set
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_bcs(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Branch on equal (zero set)
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_beq(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Bit Test
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_bit(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Branch on Minus (negative set)
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_bmi(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Branch on Not Equal (zero clear)
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_bne(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Branch on Plus (negative clear)
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_bpl(cpu_t *cpu, uint16_t in);
+
+/**
  * @brief Force Break
  * @param cpu The executing cpu
  * @param opcode The source instruction
  */
 void cpu_op_brk(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Branch on Overflow Clear
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_bvc(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Branch on Overflow Set
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_bvs(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Clear Carry
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_clc(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Clear Decimal
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_cld(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Clear Interrupt
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_cli(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Clear Overflow
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_clv(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Compare (with accumulator)
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_cmp(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Compare (with x)
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_cpx(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Compare (with y)
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_cpy(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Decrement
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_dec(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Decrement X
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_dex(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Decrement Y
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_dey(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Exclusive OR (with accumulator)
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_eor(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Increment
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_inc(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Increment X
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_inx(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Increment y
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_iny(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Jump
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_jmp(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Jump to Subroutine
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_jsr(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Load Accumulator
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_lda(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Load X
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_ldx(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Load Y
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_ldy(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Logical Shift Right
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_lsr(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief No Operation
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_nop(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Or with Accumulator
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_ora(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Push Accumulator
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_pha(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Push Processor Status
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_php(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Pull Accumulator
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_pla(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Pull Processor Status
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_plp(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Rotate Left
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_rol(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Rotate Right
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_ror(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Return from Interrupt
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_rti(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Return from Subroutine
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_rts(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Subtract with Carry
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_sbc(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Set Carry
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_sec(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Set Decimal
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_sed(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Set Interrupt Disable
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_sei(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Store Accumulator
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_sta(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Store X
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_stx(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Store Y
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_sty(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Transfer Accumulator to X
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_tax(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Transfer Accumulator to Y
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_tay(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Transfer Stack Pointer to X
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_tsx(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Transfer X to Accumulator
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_txa(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Transfer X to Stack Pointer
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_txs(cpu_t *cpu, uint16_t in);
+
+/**
+ * @brief Transfer Y to Accumulator
+ * @param cpu The executing cpu
+ * @param opcode The source instruction
+ */
+void cpu_op_tya(cpu_t *cpu, uint16_t in);
 
 #endif /* __6502_vm_cpu_h__ */

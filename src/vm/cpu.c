@@ -50,6 +50,18 @@ void cpu_set_flag(cpu_t *cpu, uint8_t flag, uint8_t value) {
 }
 
 /**
+ * @brief Get a flag from the cpu
+ * @param cpu The cpu to get the flag from
+ * @param flag The flag to get
+ * @return The value of the flag
+ */
+uint8_t cpu_get_flag(cpu_t *cpu, uint8_t flag) {
+    assert(cpu != NULL);
+
+    return (cpu->status & flag) > 0;
+}
+
+/**
  * @brief Reset a cpu
  * @param cpu The cpu to reset
  */

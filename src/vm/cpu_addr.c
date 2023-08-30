@@ -22,8 +22,9 @@ cpu_addr_t cpu_addr_table[] = {
  * @param opcode The opcode to get the argument address for
  * @return The address of the argument
  */
-uint16_t cpu_addr(cpu_t *cpu, uint8_t opcode) {
-    return cpu_addr_table[opcode >> 2](cpu);
+uint16_t cpu_addr(cpu_t *cpu, opcode_t op) {
+    // return cpu_addr_table[opcode >> 2](cpu);
+    return cpu_addr_table[op.address_mode](cpu);
 }
 
 /**

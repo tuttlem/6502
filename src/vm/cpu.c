@@ -20,6 +20,9 @@ cpu_t *cpu_create() {
 
     cpu->status = 0xff;
 
+    cpu->cycles = 0;
+    cpu->illegal = 0;
+
     return cpu;
 }
 
@@ -32,6 +35,39 @@ void cpu_destroy(cpu_t *cpu) {
 
     free(cpu);
 }
+
+/**
+ * @brief Performs a single step of execution in the cpu
+ * @param cpu The cpu to step
+ */
+void cpu_step(cpu_t *cpu) {
+    assert(cpu != NULL);
+
+    /* read the next opcode in memory */
+    uint8_t opcode = cpu_read(cpu, cpu->pc++);
+
+    /* get a reference to it in the opcode table */
+    opcode_t op = cpu_get_opcode(opcode);
+
+    /* get the address value */
+    uint16_t in = cpu_addr(cpu, op);
+
+    op.fn(cpu, in);
+    cpu->cycles += op.cycles;
+}
+
+/**
+ * @brief Executes an arbitrary opcode on a cpu
+ * @param cpu The cpu to execute
+ */
+void cpu_exec(cpu_t *cpu, uint8_t opcode) {
+    opcode_t op = cpu_get_opcode(opcode);
+    uint16_t in = cpu_addr(cpu, op);
+
+    op.fn(cpu, in);
+    cpu->cycles += op.cycles;
+}
+
 
 /**
  * @brief Set a flag on the cpu

@@ -1,47 +1,275 @@
 #include "./cpu.h"
 
-cpu_op_t op_table[] = {
-    cpu_op_brk,cpu_op_ora,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_ora,cpu_op_asl,cpu_op_unk,
-    cpu_op_php,cpu_op_ora,cpu_op_asl,cpu_op_unk,cpu_op_unk,cpu_op_ora,cpu_op_asl,cpu_op_unk,
-    cpu_op_bpl,cpu_op_ora,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_ora,cpu_op_asl,cpu_op_unk,
-    cpu_op_clc, cpu_op_ora,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_ora,cpu_op_asl,cpu_op_unk,
-    cpu_op_jsr,cpu_op_and,cpu_op_unk,cpu_op_unk,cpu_op_bit,cpu_op_and,cpu_op_rol,cpu_op_unk,
-    cpu_op_plp,cpu_op_and,cpu_op_rol,cpu_op_unk,cpu_op_bit,cpu_op_and,cpu_op_rol,cpu_op_unk,
-    cpu_op_bmi,cpu_op_and,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_and,cpu_op_rol,cpu_op_unk,
-    cpu_op_sec,cpu_op_and,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_and,cpu_op_rol,cpu_op_unk,
-    cpu_op_rti,cpu_op_eor,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_eor,cpu_op_lsr,cpu_op_unk,
-    cpu_op_pha,cpu_op_eor,cpu_op_lsr,cpu_op_unk,cpu_op_jmp,cpu_op_eor,cpu_op_lsr,cpu_op_unk,
-    cpu_op_bvc,cpu_op_eor,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_eor,cpu_op_lsr,cpu_op_unk,
-    cpu_op_cli,cpu_op_eor,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_eor,cpu_op_lsr,cpu_op_unk,
-    cpu_op_rts,cpu_op_adc,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_adc,cpu_op_ror,cpu_op_unk,
-    cpu_op_pla,cpu_op_adc,cpu_op_ror,cpu_op_unk,cpu_op_jmp,cpu_op_adc,cpu_op_ror,cpu_op_unk,
-    cpu_op_bvs,cpu_op_adc,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_adc,cpu_op_ror,cpu_op_unk,
-    cpu_op_sei,cpu_op_adc,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_adc,cpu_op_ror,cpu_op_unk,
-    cpu_op_unk,cpu_op_sta,cpu_op_unk,cpu_op_unk,cpu_op_sty,cpu_op_sta,cpu_op_stx,cpu_op_unk,
-    cpu_op_dey,cpu_op_unk,cpu_op_txa,cpu_op_unk,cpu_op_sty,cpu_op_sta,cpu_op_stx,cpu_op_unk,
-    cpu_op_bcc,cpu_op_sta,cpu_op_unk,cpu_op_unk,cpu_op_sty,cpu_op_sta,cpu_op_stx,cpu_op_unk,
-    cpu_op_tya,cpu_op_sta,cpu_op_txs,cpu_op_unk,cpu_op_unk,cpu_op_sta,cpu_op_unk,cpu_op_unk,
-    cpu_op_ldy,cpu_op_lda,cpu_op_ldx,cpu_op_unk,cpu_op_ldy,cpu_op_lda,cpu_op_ldx,cpu_op_unk,
-    cpu_op_tay,cpu_op_lda,cpu_op_tax,cpu_op_unk,cpu_op_ldy,cpu_op_lda,cpu_op_ldx,cpu_op_unk,
-    cpu_op_bcs,cpu_op_lda,cpu_op_unk,cpu_op_unk,cpu_op_ldy,cpu_op_lda,cpu_op_ldx,cpu_op_unk,
-    cpu_op_clv,cpu_op_lda,cpu_op_tsx,cpu_op_unk,cpu_op_ldy,cpu_op_lda,cpu_op_ldx,cpu_op_unk,
-    cpu_op_cpy,cpu_op_cmp,cpu_op_unk,cpu_op_unk,cpu_op_cpy,cpu_op_cmp,cpu_op_dec,cpu_op_unk,
-    cpu_op_iny,cpu_op_cmp,cpu_op_dex,cpu_op_unk,cpu_op_cpy,cpu_op_cmp,cpu_op_dec,cpu_op_unk,
-    cpu_op_bne,cpu_op_cmp,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_cmp,cpu_op_dec,cpu_op_unk,
-    cpu_op_cld,cpu_op_cmp,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_cmp,cpu_op_dec,cpu_op_unk,
-    cpu_op_cpx,cpu_op_sbc,cpu_op_unk,cpu_op_unk,cpu_op_cpx,cpu_op_sbc,cpu_op_inc,cpu_op_unk,
-    cpu_op_inx,cpu_op_sbc,cpu_op_nop,cpu_op_unk,cpu_op_cpx,cpu_op_sbc,cpu_op_inc,cpu_op_unk,
-    cpu_op_beq,cpu_op_sbc,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_sbc,cpu_op_inc,cpu_op_unk,
-    cpu_op_sed,cpu_op_sbc,cpu_op_unk,cpu_op_unk,cpu_op_unk,cpu_op_sbc,cpu_op_inc,cpu_op_unk,
+static opcode_t cpu_op_table[256] = {
+        { OPCODE_BRK, ADDR_IMP, 7, cpu_op_brk },
+        { OPCODE_ORA, ADDR_INX, 6, cpu_op_ora },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ORA, ADDR_ZP, 3, cpu_op_ora },
+        { OPCODE_ASL, ADDR_ZP, 5, cpu_op_asl },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_PHP, ADDR_IMP, 3, cpu_op_php },
+        { OPCODE_ORA, ADDR_IMM, 2, cpu_op_ora },
+        { OPCODE_ASL, ADDR_ACC, 2, cpu_op_asl },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ORA, ADDR_ABS, 4, cpu_op_ora },
+        { OPCODE_ASL, ADDR_ABS, 6, cpu_op_asl },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_BPL, ADDR_REL, 2, cpu_op_bpl },
+        { OPCODE_ORA, ADDR_INY, 5, cpu_op_ora },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ORA, ADDR_ZPX, 4, cpu_op_ora },
+        { OPCODE_ASL, ADDR_ZPX, 6, cpu_op_asl },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CLC, ADDR_IMP, 2, cpu_op_clc },
+        { OPCODE_ORA, ADDR_ABY, 4, cpu_op_ora },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ORA, ADDR_ABX, 4, cpu_op_ora },
+        { OPCODE_ASL, ADDR_ABX, 7, cpu_op_asl },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_JSR, ADDR_ABS, 6, cpu_op_jsr },
+        { OPCODE_AND, ADDR_INX, 6, cpu_op_and },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_BIT, ADDR_ZP, 3, cpu_op_bit },
+        { OPCODE_AND, ADDR_ZP, 3, cpu_op_and },
+        { OPCODE_ROL, ADDR_ZP, 5, cpu_op_rol },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_PLP, ADDR_IMP, 4, cpu_op_plp },
+        { OPCODE_AND, ADDR_IMM, 2, cpu_op_and },
+        { OPCODE_ROL, ADDR_ACC, 2, cpu_op_rol },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_BIT, ADDR_ABS, 4, cpu_op_bit },
+        { OPCODE_AND, ADDR_ABS, 4, cpu_op_and },
+        { OPCODE_ROL, ADDR_ABS, 6, cpu_op_rol },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_BMI, ADDR_REL, 2, cpu_op_bmi },
+        { OPCODE_AND, ADDR_INY, 5, cpu_op_and },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_AND, ADDR_ZPX, 4, cpu_op_and },
+        { OPCODE_ROL, ADDR_ZPX, 6, cpu_op_rol },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_SEC, ADDR_IMP, 2, cpu_op_sec },
+        { OPCODE_AND, ADDR_ABY, 4, cpu_op_and },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_AND, ADDR_ABX, 4, cpu_op_and },
+        { OPCODE_ROL, ADDR_ABX, 7, cpu_op_rol },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_RTI, ADDR_IMP, 6, cpu_op_rti },
+        { OPCODE_EOR, ADDR_INX, 6, cpu_op_eor },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_EOR, ADDR_ZP, 3, cpu_op_eor },
+        { OPCODE_LSR, ADDR_ZP, 5, cpu_op_lsr },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_PHA, ADDR_IMP, 3, cpu_op_pha },
+        { OPCODE_EOR, ADDR_IMM, 2, cpu_op_eor },
+        { OPCODE_LSR, ADDR_ACC, 2, cpu_op_lsr },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_JMP, ADDR_ABS, 3, cpu_op_jmp },
+        { OPCODE_EOR, ADDR_ABS, 4, cpu_op_eor },
+        { OPCODE_LSR, ADDR_ABS, 6, cpu_op_lsr },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_BVC, ADDR_REL, 2, cpu_op_bvc },
+        { OPCODE_EOR, ADDR_INY, 5, cpu_op_eor },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_EOR, ADDR_ZPX, 4, cpu_op_eor },
+        { OPCODE_LSR, ADDR_ZPX, 6, cpu_op_lsr },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CLI, ADDR_IMP, 2, cpu_op_cli },
+        { OPCODE_EOR, ADDR_ABY, 4, cpu_op_eor },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_EOR, ADDR_ABX, 4, cpu_op_eor },
+        { OPCODE_LSR, ADDR_ABX, 7, cpu_op_lsr },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_RTS, ADDR_IMP, 6, cpu_op_rts },
+        { OPCODE_ADC, ADDR_INX, 6, cpu_op_adc },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ADC, ADDR_ZP, 3, cpu_op_adc },
+        { OPCODE_ROR, ADDR_ZP, 5, cpu_op_ror },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_PLA, ADDR_IMP, 4, cpu_op_pla },
+        { OPCODE_ADC, ADDR_IMM, 2, cpu_op_adc },
+        { OPCODE_ROR, ADDR_ACC, 2, cpu_op_ror },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_JMP, ADDR_IND, 5, cpu_op_jmp },
+        { OPCODE_ADC, ADDR_ABS, 4, cpu_op_adc },
+        { OPCODE_ROR, ADDR_ABS, 6, cpu_op_ror },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_BVS, ADDR_REL, 2, cpu_op_bvs },
+        { OPCODE_ADC, ADDR_INY, 5, cpu_op_adc },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_IMP, 0, cpu_op_ill },
+        { OPCODE_ADC, ADDR_ZPX, 4, cpu_op_adc },
+        { OPCODE_ROR, ADDR_ZPX, 6, cpu_op_ror },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_SEI, ADDR_IMP, 2, cpu_op_sei },
+        { OPCODE_ADC, ADDR_ABY, 4, cpu_op_adc },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ADC, ADDR_ABX, 4, cpu_op_adc },
+        { OPCODE_ROR, ADDR_ABX, 7, cpu_op_ror },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_STA, ADDR_INX, 6, cpu_op_sta },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_STY, ADDR_ZP, 3, cpu_op_sty },
+        { OPCODE_STA, ADDR_ZP, 3, cpu_op_sta },
+        { OPCODE_STX, ADDR_ZP, 3, cpu_op_stx },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_DEY, ADDR_IMP, 2, cpu_op_dey },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_TXA, ADDR_IMP, 2, cpu_op_txa },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_STY, ADDR_ABS, 4, cpu_op_sty },
+        { OPCODE_STA, ADDR_ABS, 4, cpu_op_sta },
+        { OPCODE_STX, ADDR_ABS, 4, cpu_op_stx },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_BCC, ADDR_REL, 2, cpu_op_bcc },
+        { OPCODE_STA, ADDR_INY, 6, cpu_op_sta },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_STY, ADDR_ZPX, 4, cpu_op_sty },
+        { OPCODE_STA, ADDR_ZPX, 4, cpu_op_sta },
+        { OPCODE_STX, ADDR_ZPY, 4, cpu_op_stx },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_TYA, ADDR_IMP, 2, cpu_op_tya },
+        { OPCODE_STA, ADDR_ABY, 5, cpu_op_sta },
+        { OPCODE_TXS, ADDR_IMP, 2, cpu_op_txs },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_STA, ADDR_ABX, 5, cpu_op_sta },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_LDY, ADDR_IMM, 2, cpu_op_ldy },
+        { OPCODE_LDA, ADDR_INX, 6, cpu_op_lda },
+        { OPCODE_LDX, ADDR_IMM, 2, cpu_op_ldx },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_LDY, ADDR_ZP, 3, cpu_op_ldy },
+        { OPCODE_LDA, ADDR_ZP, 3, cpu_op_lda },
+        { OPCODE_LDX, ADDR_ZP, 3, cpu_op_ldx },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_TAY, ADDR_IMP, 2, cpu_op_tay },
+        { OPCODE_LDA, ADDR_IMM, 2, cpu_op_lda },
+        { OPCODE_TAX, ADDR_IMP, 2, cpu_op_tax },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_LDY, ADDR_ABS, 4, cpu_op_ldy },
+        { OPCODE_LDA, ADDR_ABS, 4, cpu_op_lda },
+        { OPCODE_LDX, ADDR_ABS, 4, cpu_op_ldx },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_BCS, ADDR_REL, 2, cpu_op_bcs },
+        { OPCODE_LDA, ADDR_INY, 5, cpu_op_lda },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_LDY, ADDR_ZPX, 4, cpu_op_ldy },
+        { OPCODE_LDA, ADDR_ZPX, 4, cpu_op_lda },
+        { OPCODE_LDX, ADDR_ZPY, 4, cpu_op_ldx },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CLV, ADDR_IMP, 2, cpu_op_clv },
+        { OPCODE_LDA, ADDR_ABY, 4, cpu_op_lda },
+        { OPCODE_TSX, ADDR_IMP, 2, cpu_op_tsx },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_LDY, ADDR_ABX, 4, cpu_op_ldy },
+        { OPCODE_LDA, ADDR_ABX, 4, cpu_op_lda },
+        { OPCODE_LDX, ADDR_ABY, 4, cpu_op_ldx },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CPY, ADDR_IMM, 2, cpu_op_cpy },
+        { OPCODE_CMP, ADDR_INX, 6, cpu_op_cmp },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CPY, ADDR_ZP, 3, cpu_op_cpy },
+        { OPCODE_CMP, ADDR_ZP, 3, cpu_op_cmp },
+        { OPCODE_DEC, ADDR_ZP, 5, cpu_op_dec },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_INY, ADDR_IMP, 2, cpu_op_iny },
+        { OPCODE_CMP, ADDR_IMM, 2, cpu_op_cmp },
+        { OPCODE_DEX, ADDR_IMP, 2, cpu_op_dex },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CPY, ADDR_ABS, 4, cpu_op_cpy },
+        { OPCODE_CMP, ADDR_ABS, 4, cpu_op_cmp },
+        { OPCODE_DEC, ADDR_ABS, 6, cpu_op_dec },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_BNE, ADDR_REL, 2, cpu_op_bne },
+        { OPCODE_CMP, ADDR_INY, 5, cpu_op_cmp },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CMP, ADDR_ZPX, 4, cpu_op_cmp },
+        { OPCODE_DEC, ADDR_ZPX, 6, cpu_op_dec },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CLD, ADDR_IMP, 2, cpu_op_cld },
+        { OPCODE_CMP, ADDR_ABY, 4, cpu_op_cmp },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CMP, ADDR_ABX, 4, cpu_op_cmp },
+        { OPCODE_DEC, ADDR_ABX, 7, cpu_op_dec },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CPX, ADDR_IMM, 2, cpu_op_cpx },
+        { OPCODE_SBC, ADDR_INX, 6, cpu_op_sbc },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CPX, ADDR_ZP, 3, cpu_op_cpx },
+        { OPCODE_SBC, ADDR_ZP, 3, cpu_op_sbc },
+        { OPCODE_INC, ADDR_ZP, 5, cpu_op_inc },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_INX, ADDR_IMP, 2, cpu_op_inx },
+        { OPCODE_SBC, ADDR_IMM, 2, cpu_op_sbc },
+        { OPCODE_NOP, ADDR_IMP, 2, cpu_op_nop },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_CPX, ADDR_ABS, 4, cpu_op_cpx },
+        { OPCODE_SBC, ADDR_ABS, 4, cpu_op_sbc },
+        { OPCODE_INC, ADDR_ABS, 6, cpu_op_inc },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_BEQ, ADDR_REL, 2, cpu_op_beq },
+        { OPCODE_SBC, ADDR_INY, 5, cpu_op_sbc },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_SBC, ADDR_ZPX, 4, cpu_op_sbc },
+        { OPCODE_INC, ADDR_ZPX, 6, cpu_op_inc },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_SED, ADDR_IMP, 2, cpu_op_sed },
+        { OPCODE_SBC, ADDR_ABY, 4, cpu_op_sbc },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
+        { OPCODE_SBC, ADDR_ABX, 4, cpu_op_sbc },
+        { OPCODE_INC, ADDR_ABX, 7, cpu_op_inc },
+        { OPCODE_ILL, ADDR_ACC, 0, cpu_op_ill },
 };
+
+opcode_t cpu_get_opcode(uint8_t opcode) {
+    return cpu_op_table[opcode];
+}
 
 /**
  * @brief Unknown
  * @param cpu The executing cpu
  * @param opcode The source instruction
  */
-void cpu_op_unk(cpu_t *cpu, uint16_t in) {
-    /* no implementation */
+void cpu_op_ill(cpu_t *cpu, uint16_t in) {
+    cpu->illegal = 1;
 }
 
 /**
@@ -50,7 +278,7 @@ void cpu_op_unk(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_adc(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t c = cpu_get_flag(cpu, FLAG_CARRY);
 
     uint16_t res = cpu->a + m + c;
@@ -69,7 +297,7 @@ void cpu_op_adc(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_and(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t res = cpu->a & m;
 
     cpu_set_flag(cpu, FLAG_NEGATIVE, res & 0x80);
@@ -84,7 +312,7 @@ void cpu_op_and(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_asl(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint16_t res = m << 1;
 
     cpu_set_flag(cpu, FLAG_CARRY, res > 0xff);
@@ -137,7 +365,7 @@ void cpu_op_beq(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_bit(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t res = cpu->a & m;
 
     cpu_set_flag(cpu, FLAG_ZERO, res == 0);
@@ -259,7 +487,7 @@ void cpu_op_clv(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_cmp(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t res = cpu->a - m;
 
     cpu_set_flag(cpu, FLAG_CARRY, cpu->a >= m);
@@ -273,7 +501,7 @@ void cpu_op_cmp(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_cpx(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t res = cpu->x - m;
 
     cpu_set_flag(cpu, FLAG_CARRY, cpu->x >= m);
@@ -287,7 +515,7 @@ void cpu_op_cpx(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_cpy(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t res = cpu->y - m;
 
     cpu_set_flag(cpu, FLAG_CARRY, cpu->y >= m);
@@ -301,7 +529,7 @@ void cpu_op_cpy(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_dec(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t res = m - 1;
 
     cpu_set_flag(cpu, FLAG_ZERO, res == 0);
@@ -340,7 +568,7 @@ void cpu_op_dey(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_eor(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t res = cpu->a ^ m;
 
     cpu_set_flag(cpu, FLAG_ZERO, res == 0);
@@ -355,7 +583,7 @@ void cpu_op_eor(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_inc(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t res = m + 1;
 
     cpu_set_flag(cpu, FLAG_ZERO, res == 0);
@@ -417,7 +645,7 @@ void cpu_op_jsr(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_lda(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
 
     cpu_set_flag(cpu, FLAG_ZERO, m == 0);
     cpu_set_flag(cpu, FLAG_NEGATIVE, m & 0x80);
@@ -431,7 +659,7 @@ void cpu_op_lda(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_ldx(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
 
     cpu_set_flag(cpu, FLAG_ZERO, m == 0);
     cpu_set_flag(cpu, FLAG_NEGATIVE, m & 0x80);
@@ -445,7 +673,7 @@ void cpu_op_ldx(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_ldy(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
 
     cpu_set_flag(cpu, FLAG_ZERO, m == 0);
     cpu_set_flag(cpu, FLAG_NEGATIVE, m & 0x80);
@@ -459,7 +687,7 @@ void cpu_op_ldy(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_lsr(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t res = m >> 1;
 
     cpu_set_flag(cpu, FLAG_CARRY, m & 0x01);
@@ -488,7 +716,7 @@ void cpu_op_nop(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_ora(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t res = cpu->a | m;
 
     cpu_set_flag(cpu, FLAG_ZERO, res == 0);
@@ -542,7 +770,7 @@ void cpu_op_plp(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_rol(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t c = cpu_get_flag(cpu, FLAG_CARRY);
 
     uint16_t res = (m << 1) | c;
@@ -564,7 +792,7 @@ void cpu_op_rol(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_ror(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t c = cpu_get_flag(cpu, FLAG_CARRY);
 
     uint16_t res = (m >> 1) | (c << 7);
@@ -609,7 +837,7 @@ void cpu_op_rts(cpu_t *cpu, uint16_t in) {
  * @param opcode The source instruction
  */
 void cpu_op_sbc(cpu_t *cpu, uint16_t in) {
-    uint8_t m = cpu_addr(cpu, in);
+    uint8_t m = cpu->bus->read(cpu->bus, in);
     uint8_t c = cpu_get_flag(cpu, FLAG_CARRY);
 
     uint16_t res = cpu->a - m - (1 - c);

@@ -153,6 +153,12 @@ void cpu_destroy(cpu_t *cpu);
 void cpu_step(cpu_t *cpu);
 
 /**
+ * @brief Run a cpu to completion
+ * @param cpu The cpu to run
+ */
+void cpu_run(cpu_t *cpu);
+
+/**
  * @brief Execute a cpu
  * @param cpu The cpu to execute
  * @param opcode The opcode to execute
